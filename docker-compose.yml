@@ -1,0 +1,17 @@
+services:
+  coolify-status-api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=localhost
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASS=mysecretpassword
+    networks:
+      - coolify_network
+
+networks:
+  coolify_network:
+    external: true
+    name: coolify
