@@ -86,10 +86,13 @@ def get_badge(application_id):
 
         if result:
             if result['status'] == 'finished':
-              response = requests.get(f'https://img.shields.io/badge/{result['application_name']}-passing-brightgreen')
+              response = requests.get(f"https://img.shields.io/badge/{result['application_name']}-passing-brightgreen")
+              return send_file(BytesIO(response.content), mimetype='image/svg+xml')
+            elif result['status'] == 'in_progress':
+              response = requests.get(f"https://img.shields.io/badge/{result['application_name']}-deploying-yellow")
               return send_file(BytesIO(response.content), mimetype='image/svg+xml')
             else:
-              response = requests.get(f'https://img.shields.io/badge/{result['application_name']}-failing-red')
+              response = requests.get(f"https://img.shields.io/badge/{result['application_name']}-failing-red")
               return send_file(BytesIO(response.content), mimetype='image/svg+xml')
         else:
             return jsonify({"error": "Application not found"}), 404
