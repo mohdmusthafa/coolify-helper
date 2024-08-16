@@ -1,7 +1,9 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_file
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
+import requests
+from io import BytesIO
 
 app = Flask(__name__)
 
@@ -48,6 +50,47 @@ def get_status(application_id):
 
         if result:
             return jsonify({"deployment_uuid": result["deployment_uuid"],"status": result['status']})
+        else:
+            return jsonify({"error": "Application not found"}), 404
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/badge/<application_id>', methods=['GET'])
+def get_badge(application_id):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        # Adjust this query based on Coolify's actual database schema
+        query = f"""
+        SELECT
+            status,
+            application_name
+        FROM
+            application_deployment_queues
+        WHERE
+            application_id = '{application_id}'
+        ORDER BY
+            created_at DESC
+        LIMIT
+            1;
+
+        """
+        cur.execute(query)
+
+        result = cur.fetchone()
+        cur.close()
+        conn.close()
+
+
+        if result:
+            if result['status'] == 'finished':
+              response = requests.get(f'https://img.shields.io/badge/{result['application_name']}-passing-brightgreen')
+              return send_file(BytesIO(response.content), mimetype='image/svg+xml')
+            else:
+              response = requests.get(f'https://img.shields.io/badge/{result['application_name']}-failing-red')
+              return send_file(BytesIO(response.content), mimetype='image/svg+xml')
         else:
             return jsonify({"error": "Application not found"}), 404
 

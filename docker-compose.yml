@@ -13,5 +13,5 @@ services:
 
 networks:
   coolify_network:
-    external: true
+    # external: true
     name: coolify
